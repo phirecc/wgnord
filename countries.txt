@@ -1,0 +1,59 @@
+Albania	2
+Argentina	10
+Australia	13
+Austria	14
+Belgium	21
+Bosnia and Herzegovina	27
+Brazil	30
+Bulgaria	33
+Canada	38
+Chile	43
+Costa Rica	52
+Croatia	54
+Cyprus	56
+Czech Republic	57
+Denmark	58
+Estonia	68
+Finland	73
+France	74
+Georgia	80
+Germany	81
+Greece	84
+Hong Kong	97
+Hungary	98
+Iceland	99
+India	100
+Indonesia	101
+Ireland	104
+Israel	105
+Italy	106
+Japan	108
+Latvia	119
+Luxembourg	126
+Malaysia	131
+Mexico	140
+Moldova	142
+Netherlands	153
+New Zealand	156
+North Macedonia	128
+Norway	163
+Poland	174
+Portugal	175
+Romania	179
+Serbia	192
+Singapore	195
+Slovakia	196
+Slovenia	197
+South Africa	200
+South Korea	114
+Spain	202
+Sweden	208
+Switzerland	209
+Taiwan	211
+Thailand	214
+Turkey	220
+Ukraine	225
+United Arab Emirates	226
+United Kingdom	227
+United States	228
+Vietnam	234
