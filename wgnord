@@ -21,7 +21,7 @@ get_credentials() {
 connect() {
 	is_connected && disconnect
 	# get_credentials
-	country_code="$(cat countries.txt | grep -i "$1" -m 1 | cut -d "	" -f 2)"
+	country_code="$(cat /usr/share/wgnord/countries.txt | grep -i "$1" -m 1 | cut -d "	" -f 2)"
 	echo "Finding best server..."
 	insights="$(query "https://zwyr157wwiu6eior.com/v1/helpers/ips/insights")"
 	longitude="$(echo "$insights" | jq -j '.longitude')"
