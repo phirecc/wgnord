@@ -1,4 +1,8 @@
 #!/bin/sh
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root"
+   exit 1
+fi
 alias query="curl -s -H 'User-Agent: NordApp Linux 3.10.0 Linux 5.4.0-58-generic'"
 login() {
 	echo "Logging in..."
