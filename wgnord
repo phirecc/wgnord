@@ -4,6 +4,7 @@ if [ "$(id -u)" -ne 0 ]; then
    exit 1
 fi
 alias query="curl -s -H 'User-Agent: NordApp Linux 3.10.0 Linux 5.4.0-58-generic'"
+host="zwyr157wwiu6eior.com"
 login() {
 	echo "Logging in..."
 	jq -njc "{username: \"$1\", password: \"$2\"}" > /usr/share/wgnord/account.json
@@ -12,7 +13,7 @@ login() {
 }
 get_token() {
 	echo "Getting new access token..."
-	query "https://zwyr157wwiu6eior.com/v1/users/tokens" -d "@/usr/share/wgnord/account.json" -H "Content-Type: application/json" > /usr/share/wgnord/token.json
+	query "https://$host/v1/users/tokens" -d "@/usr/share/wgnord/account.json" -H "Content-Type: application/json" > /usr/share/wgnord/token.json
 }
 get_credentials() {
 	echo "Getting server credentials..."
@@ -20,17 +21,17 @@ get_credentials() {
 	current_date=$(date --utc +%s)
 	[ "$current_date" -ge $((token_date-60)) ] && get_token
 	auth_token="$(printf "%s" "token:$(jq -j '.token' /usr/share/wgnord/token.json)" | base64 -w 0)"
-	query "https://zwyr157wwiu6eior.com/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > /usr/share/wgnord/credentials.json
+	query "https://$host/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > /usr/share/wgnord/credentials.json
 }
 connect() {
 	is_connected && disconnect
 	# get_credentials
 	country_code="$(grep -i "$1" -m 1 /usr/share/wgnord/countries.txt | cut -d "	" -f 2)"
 	echo "Finding best server..."
-	insights="$(query "https://zwyr157wwiu6eior.com/v1/helpers/ips/insights")"
+	insights="$(query "https://$host/v1/helpers/ips/insights")"
 	longitude="$(echo "$insights" | jq -j '.longitude')"
 	latitude="$(echo "$insights" | jq -j '.latitude')"
-	recommendations="$(query "https://zwyr157wwiu6eior.com/v1/servers/recommendations?limit=20&filters%5Bservers.status%5D=online&filters%5Bservers_technologies%5D=35&filters%5Bservers_technologies%5D%5Bpivot%5D%5Bstatus%5D=online&fields%5Bservers.id%5D&fields%5Bservers.name%5D&fields%5Bservers.hostname%5D&fields%5Bservers.station%5D&fields%5Bservers.status%5D&fields%5Bservers.load%5D&fields%5Bservers.created_at%5D&fields%5Bservers.groups.id%5D&fields%5Bservers.groups.title%5D&fields%5Bservers.technologies.id%5D&fields%5Bservers.technologies.metadata%5D&fields%5Bservers.technologies.pivot.status%5D&fields%5Bservers.specifications.identifier%5D&fields%5Bservers.specifications.values.value%5D&fields%5Bservers.locations.country.name%5D&fields%5Bservers.locations.country.code%5D&fields%5Bservers.locations.country.city.name%5D&fields%5Bservers.locations.country.city.latitude%5D&fields%5Bservers.locations.country.city.longitude%5D&coordinates%5Blongitude%5D=$longitude&coordinates%5Blatitude%5D=$latitude&fields%5Bservers.ips%5D&filters%5Bcountry_id%5D=$country_code")"
+	recommendations="$(query "https://$host/v1/servers/recommendations?limit=20&filters%5Bservers.status%5D=online&filters%5Bservers_technologies%5D=35&filters%5Bservers_technologies%5D%5Bpivot%5D%5Bstatus%5D=online&fields%5Bservers.id%5D&fields%5Bservers.name%5D&fields%5Bservers.hostname%5D&fields%5Bservers.station%5D&fields%5Bservers.status%5D&fields%5Bservers.load%5D&fields%5Bservers.created_at%5D&fields%5Bservers.groups.id%5D&fields%5Bservers.groups.title%5D&fields%5Bservers.technologies.id%5D&fields%5Bservers.technologies.metadata%5D&fields%5Bservers.technologies.pivot.status%5D&fields%5Bservers.specifications.identifier%5D&fields%5Bservers.specifications.values.value%5D&fields%5Bservers.locations.country.name%5D&fields%5Bservers.locations.country.code%5D&fields%5Bservers.locations.country.city.name%5D&fields%5Bservers.locations.country.city.latitude%5D&fields%5Bservers.locations.country.city.longitude%5D&coordinates%5Blongitude%5D=$longitude&coordinates%5Blatitude%5D=$latitude&fields%5Bservers.ips%5D&filters%5Bcountry_id%5D=$country_code")"
 	server_name="$(echo "$recommendations" | jq -j '.[0] | .name')"
 	server_hostname="$(echo "$recommendations" | jq -j '.[0] | .hostname')"
 	echo "Connecting to $server_hostname ($server_name)..."
