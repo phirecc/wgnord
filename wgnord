@@ -5,28 +5,29 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 alias query="curl -s -H 'User-Agent: NordApp Linux 3.10.0 Linux 5.4.0-58-generic'"
 host="zwyr157wwiu6eior.com"
+conf_dir=/usr/share/wgnord
 login() {
 	echo "Logging in..."
-	jq -njc "{username: \"$1\", password: \"$2\"}" > /usr/share/wgnord/account.json
+	jq -njc "{username: \"$1\", password: \"$2\"}" > $conf_dir/account.json
 	get_token
 	get_credentials
 }
 get_token() {
 	echo "Getting new access token..."
-	query "https://$host/v1/users/tokens" -d "@/usr/share/wgnord/account.json" -H "Content-Type: application/json" > /usr/share/wgnord/token.json
+	query "https://$host/v1/users/tokens" -d "@$conf_dir/account.json" -H "Content-Type: application/json" > $conf_dir/token.json
 }
 get_credentials() {
 	echo "Getting server credentials..."
-	token_date=$(date -d "$(jq -r '.expires_at' /usr/share/wgnord/token.json)" --utc +%s)
+	token_date=$(date -d "$(jq -r '.expires_at' $conf_dir/token.json)" --utc +%s)
 	current_date=$(date --utc +%s)
 	[ "$current_date" -ge $((token_date-60)) ] && get_token
-	auth_token="$(printf "%s" "token:$(jq -j '.token' /usr/share/wgnord/token.json)" | base64 -w 0)"
-	query "https://$host/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > /usr/share/wgnord/credentials.json
+	auth_token="$(printf "%s" "token:$(jq -j '.token' $conf_dir/token.json)" | base64 -w 0)"
+	query "https://$host/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > $conf_dir/credentials.json
 }
 connect() {
 	is_connected && disconnect
 	# get_credentials
-	country_code="$(grep -i "$1" -m 1 /usr/share/wgnord/countries.txt | cut -d "	" -f 2)"
+	country_code="$(grep -i "$1" -m 1 $conf_dir/countries.txt | cut -d "	" -f 2)"
 	echo "Finding best server..."
 	insights="$(query "https://$host/v1/helpers/ips/insights")"
 	longitude="$(echo "$insights" | jq -j '.longitude')"
@@ -37,8 +38,8 @@ connect() {
 	echo "Connecting to $server_hostname ($server_name)..."
 	server_ip="$(echo "$recommendations" | jq -j '.[0] | .ips[0].ip.ip')"
 	server_pubkey="$(echo "$recommendations" | jq -j '.[0] | .technologies[-1].metadata[0].value')"
-	privkey="$(jq -j '.nordlynx_private_key' /usr/share/wgnord/credentials.json)"
-	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" /usr/share/wgnord/template.conf > /etc/wireguard/wgnord.conf
+	privkey="$(jq -j '.nordlynx_private_key' $conf_dir/credentials.json)"
+	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" $conf_dir/template.conf > /etc/wireguard/wgnord.conf
 	wg-quick up wgnord && echo "Connected successfully!"
 }
 disconnect() {
