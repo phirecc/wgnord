@@ -12,7 +12,7 @@ login() {
 }
 get_token() {
 	echo "Getting new access token..."
-	query 'https://zwyr157wwiu6eior.com/v1/users/tokens' -d "$(cat /usr/share/wgnord/account.json)" -H "Content-Type: application/json" > /usr/share/wgnord/token.json
+	query "https://zwyr157wwiu6eior.com/v1/users/tokens" -d "$(cat /usr/share/wgnord/account.json)" -H "Content-Type: application/json" > /usr/share/wgnord/token.json
 }
 get_credentials() {
 	echo "Getting server credentials..."
@@ -20,7 +20,7 @@ get_credentials() {
 	current_date=$(date --utc +%s)
 	[ $current_date -ge $((token_date-60)) ] && get_token
 	auth_token="$(echo -n "token:$(jq -j '.token' /usr/share/wgnord/token.json)" | base64 -w 0)"
-	query 'https://zwyr157wwiu6eior.com/v1/users/services/credentials' -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > /usr/share/wgnord/credentials.json
+	query "https://zwyr157wwiu6eior.com/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > /usr/share/wgnord/credentials.json
 }
 connect() {
 	is_connected && disconnect
