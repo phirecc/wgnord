@@ -53,4 +53,5 @@ case $1 in
 	l|login) login "$2" "$3" ;;
 	c|connect) connect "$2" ;;
 	d|disconnect) disconnect ;;
+	g|get_credentials)  get_credentials ;;
 esac
