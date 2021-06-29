@@ -6,7 +6,7 @@ fi
 alias query="curl -s -H 'User-Agent: NordApp Linux 3.10.0 Linux 5.4.0-58-generic'"
 alias print="printf \"\033[32m%s\n\033[0m\""
 host="zwyr157wwiu6eior.com"
-conf_dir=/usr/share/wgnord
+conf_dir=/var/lib/wgnord
 login() {
 	print "Logging in..."
 	jq -njc "{username: \"$1\", password: \"$2\"}" > $conf_dir/account.json
