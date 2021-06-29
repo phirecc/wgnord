@@ -17,7 +17,7 @@ login() {
 get_token() {
 	print "Getting new access token..."
 	query "https://$host/v1/users/tokens" -d "@$conf_dir/account.json" -H "Content-Type: application/json" > $conf_dir/token.json
-	err=$(jq -er ".errors.message" $conf_dir/token.json) && { print_error "Error getting token: $err"; exit 1; }
+	err="$(jq -er '.errors.message' $conf_dir/token.json)" && { print_error "Error getting token: $err"; exit 1; }
 }
 get_credentials() {
 	print "Getting server credentials..."
@@ -26,7 +26,7 @@ get_credentials() {
 	[ "$current_date" -ge $((token_date-60)) ] && get_token
 	auth_token="$(printf "%s" "token:$(jq -j '.token' $conf_dir/token.json)" | base64 -w 0)"
 	query "https://$host/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > $conf_dir/credentials.json
-	err=$(jq -er ".errors.message" $conf_dir/credentials.json) && { print_error "Error getting credentials: $err"; exit 1; }
+	err="$(jq -er '.errors.message' $conf_dir/credentials.json)" && { print_error "Error getting credentials: $err"; exit 1; }
 }
 connect() {
 	is_connected && disconnect
