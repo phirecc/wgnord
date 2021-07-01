@@ -1,5 +1,7 @@
 # wgnord
-This script lets you connect to NordVPN servers through wireguard using their "NordLynx" protocol.
+*Note: I don't condone using NordVPN, it is untrustworthy like all other commercial VPN providers. I don't say no to free things though.*
+
+This script lets you connect to NordVPN servers through WireGuard using their "NordLynx" protocol.
 
 Dependencies: 
 
@@ -31,7 +33,7 @@ Now you can connect to a server:
 sudo wgnord c France
 ```
 
-Note: country names are case-insensitive and grepped for, so `sudo wgnord c fra` would work aswell. See countries.txt for a list of available countries.
+Note: country names are case-insensitive and grepped for, so `sudo wgnord c fra` would work aswell. See `countries.txt` for a list of available countries.
 
 To disconnect:
 ```
