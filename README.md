@@ -45,3 +45,10 @@ If you want to change WireGuard config parameters (MTU, DNS, etc.), simply modif
 This script includes a "kill-switch" because of the way wg-quick works. Connections will typically stay alive for multiple days, but if it dies you can reconnect by running another connect command.
 
 From time to time (weekly or so) NordVPN invalidates server credentials, which causes connections to fail. Run `sudo wgnord get_credentials` to load new ones.
+
+The hardcoded sketchy-looking domain `zwyr157wwiu6eior.com` is one of the many domains NordVPN uses for its backend. Presumably to bypass some sorts of bans.
+
+You don't have to trust me though:
+```
+strings /bin/nordvpnd | grep "zwyr157wwiu6eior\.com" --color
+```
