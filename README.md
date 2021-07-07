@@ -8,7 +8,6 @@ Dependencies:
 - jq
 - curl
 - wg-quick (wireguard-tools)
-- sed
 
 To install them on arch:
 ```
