@@ -50,7 +50,7 @@ connect() {
 	privkey="$(jq -j '.nordlynx_private_key' $conf_dir/credentials.json)"
 	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" $conf_dir/template.conf > /etc/wireguard/wgnord.conf
 	if is_connected; then
-		wg-quick strip wgnord | wg syncconf wgnord /dev/stdin
+		wg-quick strip wgnord | wg setconf wgnord /dev/stdin
 		wg set wgnord fwmark 0xca6c
 	else
 		wg-quick up wgnord
