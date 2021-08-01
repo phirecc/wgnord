@@ -29,8 +29,15 @@ get_credentials() {
 	err="$(jq -er '.errors.message' $conf_dir/credentials.json)" && { print_error "Error getting credentials: $err"; exit 1; }
 }
 connect() {
+	out_file=/etc/wireguard/wgnord.conf
+	OPTIND=2
+	while getopts "fno:" o; do case "${o}" in
+		f) force=1 ;;
+		n) dont_act=1 ;;
+		o) out_file="$OPTARG" ;;
+	esac done
 	print "Finding best server..."
-	if [ "$2" = "-f" ] || [ ! -f  $conf_dir/coords.json ]; then
+	if [ $force ] || [ ! -f  $conf_dir/coords.json ] && [ ! $dont_act ]; then
 		is_connected && disconnect
 		insights="$(query "https://$host/v1/helpers/ips/insights")"
 		longitude="$(echo "$insights" | jq -j '.longitude')"
@@ -44,17 +51,19 @@ connect() {
 	recommendations="$(query "https://$host/v1/servers/recommendations?limit=20&filters%5Bservers.status%5D=online&filters%5Bservers_technologies%5D=35&filters%5Bservers_technologies%5D%5Bpivot%5D%5Bstatus%5D=online&fields%5Bservers.id%5D&fields%5Bservers.name%5D&fields%5Bservers.hostname%5D&fields%5Bservers.station%5D&fields%5Bservers.status%5D&fields%5Bservers.load%5D&fields%5Bservers.created_at%5D&fields%5Bservers.groups.id%5D&fields%5Bservers.groups.title%5D&fields%5Bservers.technologies.id%5D&fields%5Bservers.technologies.metadata%5D&fields%5Bservers.technologies.pivot.status%5D&fields%5Bservers.specifications.identifier%5D&fields%5Bservers.specifications.values.value%5D&fields%5Bservers.locations.country.name%5D&fields%5Bservers.locations.country.code%5D&fields%5Bservers.locations.country.city.name%5D&fields%5Bservers.locations.country.city.latitude%5D&fields%5Bservers.locations.country.city.longitude%5D&coordinates%5Blongitude%5D=$longitude&coordinates%5Blatitude%5D=$latitude&fields%5Bservers.ips%5D&filters%5Bcountry_id%5D=$country_code")"
 	server_name="$(echo "$recommendations" | jq -j '.[0] | .name')"
 	server_hostname="$(echo "$recommendations" | jq -j '.[0] | .hostname')"
-	print "Connecting to $server_hostname ($server_name)..."
 	server_ip="$(echo "$recommendations" | jq -j '.[0] | .ips[0].ip.ip')"
 	server_pubkey="$(echo "$recommendations" | jq -j '.[0] | .technologies[-1].metadata[0].value')"
 	privkey="$(jq -j '.nordlynx_private_key' $conf_dir/credentials.json)"
-	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" $conf_dir/template.conf > /etc/wireguard/wgnord.conf
-	if is_connected; then
-		wg-quick strip wgnord | wg setconf wgnord /dev/stdin
-		wg set wgnord fwmark 0xca6c
-	else
-		wg-quick up wgnord
-	fi && print "Connected successfully!"
+	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" $conf_dir/template.conf > "$out_file"
+	if [ ! $dont_act ]; then
+		print "Connecting to $server_hostname ($server_name)..."
+		if is_connected; then
+			wg-quick strip wgnord | wg setconf wgnord /dev/stdin
+			wg set wgnord fwmark 0xca6c
+		else
+			wg-quick up wgnord
+		fi && print "Connected successfully!"
+	fi
 }
 disconnect() {
 	print "Disconnecting..."
@@ -67,7 +76,7 @@ is_connected() {
 
 case $1 in
 	l|login) login "$2" "$3" ;;
-	c|connect) connect "$2" "$3" ;;
+	c|connect) shift; connect "$@" ;;
 	d|disconnect) disconnect ;;
 	g|get_credentials) get_credentials ;;
 esac
