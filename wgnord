@@ -37,7 +37,7 @@ connect() {
 		o) out_file="$OPTARG" ;;
 	esac done
 	print "Finding best server..."
-	if [ $force ] || [ ! -f  $conf_dir/coords.json ] && [ ! $dont_act ]; then
+	if [ $force ] || [ ! -f $conf_dir/coords.json ] && [ ! $dont_act ]; then
 		is_connected && disconnect
 		insights="$(query "https://$host/v1/helpers/ips/insights")"
 		longitude="$(echo "$insights" | jq -j '.longitude')"
@@ -73,10 +73,27 @@ is_connected() {
 	ip link show wgnord > /dev/null 2>&1
 	return
 }
+help() { cat << EOF
+Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) | g(et_credentials) ]
+
+login:
+    wgnord l "john.smith@example.com" "verysecurepassword"
+connect:
+    wgnord c france
+    -f            Refresh longitue/latitude
+    -n            Don't connect
+    -o out.conf   Write config to different file
+disconnect:
+    wgnord d
+get_credentials:
+    wgnord g
+EOF
+}
 
 case $1 in
 	l|login) login "$2" "$3" ;;
 	c|connect) shift; connect "$@" ;;
 	d|disconnect) disconnect ;;
 	g|get_credentials) get_credentials ;;
+	*) help ;;
 esac
