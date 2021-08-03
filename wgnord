@@ -81,7 +81,7 @@ login:
     wgnord l "john.smith@example.com" "verysecurepassword"
 connect:
     wgnord c france
-    -f            Refresh longitue/latitude
+    -f            Refresh longitude/latitude
     -n            Don't connect
     -o out.conf   Write config to different file
 disconnect:
