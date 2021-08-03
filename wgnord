@@ -10,6 +10,7 @@ host="zwyr157wwiu6eior.com"
 conf_dir=/var/lib/wgnord
 login() {
 	print "Logging in..."
+	umask 027
 	jq -njc "{username: \"$1\", password: \"$2\"}" > $conf_dir/account.json
 	get_token
 	get_credentials
