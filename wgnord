@@ -9,6 +9,7 @@ alias print_error="printf \"\033[31m%s\n\033[0m\""
 host="zwyr157wwiu6eior.com"
 conf_dir=/var/lib/wgnord
 login() {
+	[ -z "$1" ] && help
 	pass="$2"
 	if [ -z "$pass" ]; then
 		printf "Enter password: "
@@ -45,6 +46,7 @@ connect() {
 		n) dont_act=1 ;;
 		o) out_file="$OPTARG" ;;
 	esac done
+	[ -z "$1" ] && help
 	print "Finding best server..."
 	if [ $force ] || [ ! -f $conf_dir/coords.json ] && [ ! $dont_act ]; then
 		is_connected && disconnect
@@ -98,6 +100,7 @@ disconnect:
 get_credentials:
     wgnord g
 EOF
+	exit
 }
 
 case $1 in
