@@ -9,9 +9,17 @@ alias print_error="printf \"\033[31m%s\n\033[0m\""
 host="zwyr157wwiu6eior.com"
 conf_dir=/var/lib/wgnord
 login() {
+	pass="$2"
+	if [ -z "$pass" ]; then
+		printf "Enter password: "
+		stty -echo
+		read pass
+		stty echo
+		echo
+	fi
 	print "Logging in..."
 	umask 027
-	jq -njc "{username: \"$1\", password: \"$2\"}" > $conf_dir/account.json
+	jq -njc "{username: \"$1\", password: \"$pass\"}" > $conf_dir/account.json
 	get_token
 	get_credentials
 }
@@ -79,6 +87,7 @@ Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) | g(et_credentials) ]
 
 login:
     wgnord l "john.smith@example.com" "verysecurepassword"
+    If the password was omitted it will be read from stdin
 connect:
     wgnord c france
     -f            Refresh longitude/latitude
