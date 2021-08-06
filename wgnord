@@ -6,7 +6,7 @@ fi
 alias query="curl -s -H 'User-Agent: NordApp Linux 3.10.0 Linux 5.4.0-58-generic'"
 alias print="printf \"\033[32m%s\n\033[0m\""
 alias print_error="printf \"\033[31m%s\n\033[0m\""
-host="zwyr157wwiu6eior.com"
+host="api.nordvpn.com"
 conf_dir=/var/lib/wgnord
 login() {
 	[ -z "$1" ] && help
