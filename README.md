@@ -14,16 +14,16 @@ To install them on arch:
 sudo pacman -S --needed jq curl wireguard-tools
 ```
 
-wgnord can also be installed through the AUR like so:
-```
-yay -S wgnord
-```
-
 ## Installation
 ```
 git clone https://git.phire.cc/me/wgnord
 cd wgnord
 sudo ./install.sh
+```
+
+wgnord can also be installed through the AUR like so:
+```
+yay -S wgnord
 ```
 
 ## Usage
