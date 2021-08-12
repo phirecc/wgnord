@@ -41,10 +41,11 @@ get_credentials() {
 connect() {
 	out_file=/etc/wireguard/wgnord.conf
 	OPTIND=2
-	while getopts "fno:" o; do case "${o}" in
+	while getopts "fno:" o; do case "$o" in
 		f) force=1 ;;
 		n) dont_act=1 ;;
 		o) out_file="$OPTARG" ;;
+		*) exit 1 ;;
 	esac done
 	[ -z "$1" ] && help
 	print "Finding best server..."
