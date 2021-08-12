@@ -99,6 +99,8 @@ disconnect:
     wgnord d
 get_credentials:
     wgnord g
+
+wgnord's files are in $conf_dir, edit template.conf to change Wireguard options
 EOF
 	exit
 }
