@@ -100,6 +100,7 @@ disconnect:
     wgnord d
 get_credentials:
     wgnord g
+    This typically isn't needed. You can try running this if the connection fails
 
 wgnord's files are in $conf_dir, edit template.conf to change Wireguard options
 EOF
