@@ -93,7 +93,7 @@ login:
     If the password was omitted it will be read from stdin
 connect:
     wgnord c france
-    -f            Refresh longitude/latitude
+    -f            Refresh cached longitude/latitude
     -n            Don't connect
     -o out.conf   Write config to different file
 disconnect:
