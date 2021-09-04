@@ -1,13 +1,15 @@
 #!/bin/sh
-if [ "$(id -u)" -ne 0 ]; then
-	echo "This script must be run as root"
-	exit 1
-fi
 alias query="curl -s -H 'User-Agent: NordApp Linux 3.10.0 Linux 5.4.0-58-generic'"
 alias print="printf \"\033[32m%s\n\033[0m\""
 alias print_error="printf \"\033[31m%s\n\033[0m\""
 host="api.nordvpn.com"
 conf_dir=/var/lib/wgnord
+check_root() {
+	if [ "$(id -u)" -ne 0 ]; then
+		echo "This script must be run as root"
+		exit 1
+	fi
+}
 login() {
 	[ -z "$1" ] && help
 	pass="$2"
@@ -108,9 +110,9 @@ EOF
 }
 
 case $1 in
-	l|login) login "$2" "$3" ;;
-	c|connect) shift; connect "$@" ;;
-	d|disconnect) disconnect ;;
-	g|get_credentials) get_credentials ;;
+	l|login) check_root; login "$2" "$3" ;;
+	c|connect) check_root; shift; connect "$@" ;;
+	d|disconnect) check_root; disconnect ;;
+	g|get_credentials) check_root; get_credentials ;;
 	*) help ;;
 esac
