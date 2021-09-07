@@ -22,7 +22,7 @@ login() {
 	fi
 	print "Logging in..."
 	umask 027
-	jq -njc "{username: \"$1\", password: \"$pass\"}" > $conf_dir/account.json
+	jq -njc "{username: \"$1\", password: \"$(echo "$pass" | sed 's/"/\\"/g')\"}" > $conf_dir/account.json
 	get_token
 	get_credentials
 }
