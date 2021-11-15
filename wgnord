@@ -66,7 +66,7 @@ connect() {
 	server_name="$(echo "$recommendations" | jq -j '.[0] | .name')"
 	server_hostname="$(echo "$recommendations" | jq -j '.[0] | .hostname')"
 	server_ip="$(echo "$recommendations" | jq -j '.[0] | .ips[0].ip.ip')"
-	server_pubkey="$(echo "$recommendations" | jq -j '.[0] | .technologies[-1].metadata[0].value')"
+	server_pubkey="$(echo "$recommendations" | jq -j '.[0] | .technologies[] | select(.metadata[0].name == "public_key") | .metadata[0].value')"
 	privkey="$(jq -j '.nordlynx_private_key' $conf_dir/credentials.json)"
 	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" $conf_dir/template.conf > "$out_file"
 	if [ ! $dont_act ]; then
