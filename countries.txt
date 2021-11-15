@@ -1,3 +1,6 @@
+UAE	226
+UK	227
+US	228
 Albania	2
 Argentina	10
 Australia	13
