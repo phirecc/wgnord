@@ -1,6 +1,4 @@
 # wgnord
-*Note: I don't condone using NordVPN, it is untrustworthy like all other commercial VPN providers. I don't say no to free things though.*
-
 This script lets you connect to NordVPN servers through WireGuard using their "NordLynx" protocol.
 
 Dependencies: 
