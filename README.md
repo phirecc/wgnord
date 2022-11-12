@@ -37,9 +37,10 @@ sudo pacman -S --needed jq curl wireguard-tools openresolv
 
 Manual installation:
 ```
-git clone https://git.phire.cc/me/wgnord
+git clone https://github.com/phirecc/wgnord
 cd wgnord
-sudo ./install.sh
+sudo install -Dm600 template.conf /var/lib/wgnord/template.conf
+sudo install -Dm755 wgnord /usr/bin/wgnord
 ```
 
 `wgnord` can also be installed through the AUR like so:
