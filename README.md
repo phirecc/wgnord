@@ -2,11 +2,11 @@
 This script lets you connect to NordVPN servers through WireGuard using their "NordLynx" protocol.
 
 ```
-Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) | g(et_credentials) ]
+Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) ]
 
 login:
-    wgnord l "john.smith@example.com" "verysecurepassword"
-    If the password was omitted it will be read from stdin
+    wgnord l "your_token"
+    You can generate a (permament) token in the NordVPN dashboard
 connect:
     wgnord c france
     -f            Refresh cached longitude/latitude
@@ -14,9 +14,6 @@ connect:
     -o out.conf   Write config to different file
 disconnect:
     wgnord d
-get_credentials:
-    wgnord g
-    This typically isn't needed. You can try running this if the connection fails
 
 wgnord's files are in /var/lib/wgnord, edit template.conf to change Wireguard options
 ```
@@ -51,8 +48,11 @@ paru -S wgnord
 ## Usage
 Login (you only need to do this once):
 ```
-sudo wgnord l "bob@smith.com" "securepassword123"
+sudo wgnord l "your_token"
 ```
+
+You can generate a (permament) token in the NordVPN dashboard under `Access token > Generate new
+token`
 
 Now you can connect to a server:
 ```
@@ -70,8 +70,6 @@ If you want to change WireGuard config parameters (MTU, DNS, etc.), simply modif
 
 ## Extra
 This script includes a "kill-switch" because of the way wg-quick works. Connections will typically stay alive for multiple days, but if it dies you can reconnect by running another connect command.
-
-From time to time (weekly or so) NordVPN invalidates server credentials, which causes connections to fail. Run `sudo wgnord get_credentials` to load new ones.
 
 ## Note
 This third-party project is in no way affiliated with NordVPN.

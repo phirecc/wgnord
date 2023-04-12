@@ -1,5 +1,5 @@
 #!/bin/sh
-alias query="curl -s -H 'User-Agent: NordApp Linux 3.12.0 Linux 5.4.0-58-generic'"
+alias query="curl -s -H 'User-Agent: NordApp Linux 3.16.1 Linux 5.4.0-58-generic'"
 alias print="printf \"\033[32m%s\n\033[0m\""
 alias print_error="printf \"\033[31m%s\n\033[0m\""
 host="api.nordvpn.com"
@@ -12,31 +12,7 @@ check_root() {
 }
 login() {
 	[ -z "$1" ] && help
-	pass="$2"
-	if [ -z "$pass" ]; then
-		printf "Enter password: "
-		stty -echo
-		read pass
-		stty echo
-		echo
-	fi
-	print "Logging in..."
-	umask 027
-	jq -njc "{username: \"$1\", password: \"$(echo "$pass" | sed 's/"/\\"/g')\"}" > $conf_dir/account.json
-	get_token
-	get_credentials
-}
-get_token() {
-	print "Getting new access token..."
-	query "https://$host/v1/users/tokens" -d "@$conf_dir/account.json" -H "Content-Type: application/json" > $conf_dir/token.json
-	err="$(jq -er '.errors.message' $conf_dir/token.json)" && { print_error "Error getting token: $err"; exit 1; }
-}
-get_credentials() {
-	print "Getting server credentials..."
-	token_date=$(date -d "$(jq -r '.expires_at' $conf_dir/token.json)" --utc +%s)
-	current_date=$(date --utc +%s)
-	[ "$current_date" -ge $((token_date-60)) ] && get_token
-	auth_token="$(printf "%s" "token:$(jq -j '.token' $conf_dir/token.json)" | base64 -w 0)"
+	auth_token="$(printf "%s" "token:$1" | base64 -w 0)"
 	query "https://$host/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > $conf_dir/credentials.json
 	err="$(jq -er '.errors.message' $conf_dir/credentials.json)" && { print_error "Error getting credentials: $err"; exit 1; }
 }
@@ -93,11 +69,11 @@ is_connected() {
 	return
 }
 help() { cat << EOF
-Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) | g(et_credentials) ]
+Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) ]
 
 login:
-    wgnord l "john.smith@example.com" "verysecurepassword"
-    If the password was omitted it will be read from stdin
+    wgnord l "your_token"
+    You can generate a (permament) token in the NordVPN dashboard
 connect:
     wgnord c france
     -f            Refresh cached longitude/latitude
@@ -105,9 +81,6 @@ connect:
     -o out.conf   Write config to different file
 disconnect:
     wgnord d
-get_credentials:
-    wgnord g
-    This typically isn't needed. You can try running this if the connection fails
 
 wgnord's files are in $conf_dir, edit template.conf to change Wireguard options
 EOF
@@ -115,9 +88,8 @@ EOF
 }
 
 case $1 in
-	l|login) check_root; login "$2" "$3" ;;
+	l|login) check_root; login "$2" ;;
 	c|connect) check_root; shift; connect "$@" ;;
 	d|disconnect) check_root; disconnect ;;
-	g|get_credentials) check_root; get_credentials ;;
 	*) help ;;
 esac
