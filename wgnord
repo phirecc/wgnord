@@ -10,11 +10,20 @@ check_root() {
 		exit 1
 	fi
 }
+account() {
+	auth_token="$(cat $conf_dir/auth_token 2>&1)" || { print_error "Error reading auth_token, are you logged in? ($auth_token)"; exit 1; }
+	current="$(query "https://$host/v1/users/current" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token")"
+	services="$(query "https://$host/v1/users/services" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token")"
+	echo "E-Mail: $(echo $current | jq -er '.email')"
+	echo "Created at: $(echo $current | jq -er '.created_at')"
+	echo "VPN Service expires at: $(echo $services | jq -er '.[] | select(.service.identifier == "vpn") | .expires_at')"
+}
 login() {
 	[ -z "$1" ] && help
 	auth_token="$(printf "%s" "token:$1" | base64 -w 0)"
 	query "https://$host/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > $conf_dir/credentials.json
 	err="$(jq -er '.errors.message' $conf_dir/credentials.json)" && { print_error "Error getting credentials: $err"; exit 1; }
+	echo -n $auth_token > $conf_dir/auth_token
 }
 get_country_code() {
 	buf="$(grep -i "^$1	" -m 1 $conf_dir/countries_iso31662.txt | cut -d "	" -f 2)"
@@ -81,6 +90,9 @@ connect:
     -o out.conf   Write config to different file
 disconnect:
     wgnord d
+account:
+    wgnord a
+    Prints information about the currently logged in account
 
 wgnord's files are in $conf_dir, edit template.conf to change Wireguard options
 EOF
@@ -91,5 +103,6 @@ case $1 in
 	l|login) check_root; login "$2" ;;
 	c|connect) check_root; shift; connect "$@" ;;
 	d|disconnect) check_root; disconnect ;;
+	a|account) check_root; account ;;
 	*) help ;;
 esac
