@@ -17,9 +17,9 @@ login() {
 	err="$(jq -er '.errors.message' $conf_dir/credentials.json)" && { print_error "Error getting credentials: $err"; exit 1; }
 }
 get_country_code() {
-    buf="$(grep -i "^$1	" -m 1 $conf_dir/countries_iso31662.txt | cut -d "	" -f 2)"
-    [ -z "$buf" ] && buf="$(grep -i "$1" -m 1 $conf_dir/countries.txt | cut -d "	" -f 2)"
-    echo "$buf"
+	buf="$(grep -i "^$1	" -m 1 $conf_dir/countries_iso31662.txt | cut -d "	" -f 2)"
+	[ -z "$buf" ] && buf="$(grep -i "$1" -m 1 $conf_dir/countries.txt | cut -d "	" -f 2)"
+	echo "$buf"
 }
 connect() {
 	out_file=/etc/wireguard/wgnord.conf
