@@ -36,7 +36,9 @@ Manual installation:
 ```
 git clone https://github.com/phirecc/wgnord
 cd wgnord
-sudo install -Dm600 template.conf /var/lib/wgnord/template.conf
+install -Dm644 template.conf /var/lib/wgnord/template.conf
+install -Dm644 countries.txt /var/lib/wgnord/countries.txt
+install -Dm644 countries_iso31662.txt /var/lib/wgnord/countries_iso31662.txt
 sudo install -Dm755 wgnord /usr/bin/wgnord
 ```
 
