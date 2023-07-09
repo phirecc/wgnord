@@ -31,6 +31,11 @@ get_country_code() {
 	echo "$buf"
 }
 connect() {
+	[ ! -f $conf_dir/credentials.json ] && {
+		print_error "$conf_dir/credentials.json doesn't exist, are you logged in?"
+		echo -e "\nNote: wgnord changed its login mechanism in version 0.2.0. See --help on how to login."
+		exit 1
+	}
 	out_file=/etc/wireguard/wgnord.conf
 	OPTIND=2
 	while getopts "fno:" o; do case "$o" in
