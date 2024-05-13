@@ -83,7 +83,7 @@ is_connected() {
 	return
 }
 help() { cat << EOF
-Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) ]
+Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) | a(ccount) ]
 
 login:
     wgnord l "your_token"
