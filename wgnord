@@ -82,6 +82,16 @@ is_connected() {
 	ip link show wgnord > /dev/null 2>&1
 	return
 }
+
+status() {
+	if is_connected; then
+		server_ip="$(wg show wgnord endpoints | awk '{print $2}')"
+		print "Connected to: $server_ip"
+	else
+		print_error "No active VPN connection"
+	fi
+}
+
 help() { cat << EOF
 Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) | a(ccount) ]
 
@@ -98,6 +108,9 @@ disconnect:
 account:
     wgnord a
     Prints information about the currently logged in account
+status:
+    wgnord s
+    Prints current VPN connection status
 
 wgnord's files are in $conf_dir, edit template.conf to change Wireguard options
 EOF
@@ -109,5 +122,6 @@ case $1 in
 	c|connect) check_root; shift; connect "$@" ;;
 	d|disconnect) check_root; disconnect ;;
 	a|account) check_root; account ;;
+	s|status) check_root; status ;;
 	*) help ;;
 esac
