@@ -1,5 +1,8 @@
 #!/bin/sh
-alias query="curl -s -H 'User-Agent: NordApp Linux 3.16.1 Linux 5.4.0-58-generic'"
+version="3.18.4"
+kernel=$(uname -r | sed 's/-.*//')
+[ -z "$kernel" ] && kernel="6.6.32"
+alias query="curl -s -H 'User-Agent: NordApp Linux $version $kernel-generic'"
 alias print="printf \"\033[32m%s\n\033[0m\""
 alias print_error="printf \"\033[31m%s\n\033[0m\""
 host="api.nordvpn.com"
