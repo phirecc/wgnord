@@ -1,5 +1,5 @@
 #!/bin/sh
-version=$(curl -s https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/ | grep -oP 'nordvpn_\K[0-9.]+(?=_amd64\.deb)' | tail -n 1)
+version=$(curl -s --max-time 2 https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/ | grep -oP 'nordvpn_\K[0-9.]+(?=_amd64\.deb)' | tail -n 1)
 [ -z "$version" ] && version="3.18.4"
 kernel=$(uname -r | sed 's/-.*//')
 [ -z "$kernel" ] && kernel="6.6.32"
