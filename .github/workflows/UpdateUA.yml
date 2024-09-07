@@ -2,22 +2,28 @@ name: Update User Agent
 
 on:
   schedule:
-    - cron: '0 0 * * 0'  # Runs every Sunday at midnight
-  workflow_dispatch:
+    - cron: '0 0 * * 0' # Runs every Sunday at midnight
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
 
 jobs:
-  update-user-agent:
+  update:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Update user agent version in script
-        run: |
-          sed -i "s/^version=\"[^\"]*\"/version=\"${{ env.LATEST_VERSION }}\"/" path/to/your/script.sh
-          git config --global user.email "github-bot@users.noreply.github.com"
-          git config --global user.name "github-bot"
-          git add path/to/your/script.sh
-          git commit -m "Update user agent version to ${{ env.LATEST_VERSION }}"
-          git push
+    - name: Fetch latest NordVPN version
+      id: fetch_version
+      run: |
+        latest_version=$(curl -s https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/ | grep -oP 'nordvpn_\K[0-9.]+(?=_amd64\.deb)' | tail -n 1)
+        echo "LATEST_VERSION=$latest_version" >> $GITHUB_ENV
+
+    - name: Update user agent version in script
+      run: |
+        sed -i "s/^version=\"[^\"]*\"/version=\"${{ env.LATEST_VERSION }}\"/" wgnord
+        git config --global user.email "github-bot@users.noreply.github.com"
+        git config --global user.name "github-bot"
+        git add wgnord
+        git commit -m "Update user agent version to ${{ env.LATEST_VERSION }}"
+        git push
