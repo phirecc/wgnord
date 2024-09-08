@@ -42,6 +42,7 @@ cd wgnord
 install -Dm644 template.conf /var/lib/wgnord/template.conf
 install -Dm644 countries.txt /var/lib/wgnord/countries.txt
 install -Dm644 countries_iso31662.txt /var/lib/wgnord/countries_iso31662.txt
+install -Dm644 hostname_ids.txt /var/lib/wgnord/hostname_ids.txt
 sudo install -Dm755 wgnord /usr/bin/wgnord
 ```
 

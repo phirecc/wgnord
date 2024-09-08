@@ -47,7 +47,7 @@ connect() {
 	[ -z "$1" ] && help
 	server_pick=""
 	if echo "$1" | grep -q '[0-9]$'; then
-		matched_row="$(grep -m 1 "$1" hostname_ids.txt)" || {
+		matched_row="$(grep -m 1 "$1" $conf_dir/hostname_ids.txt)" || {
 			print_error "No server with hostname matching $1 found"
 			exit 1
 		}
