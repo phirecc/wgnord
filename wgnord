@@ -45,23 +45,34 @@ connect() {
 		*) exit 1 ;;
 	esac done
 	[ -z "$1" ] && help
-	print "Finding best server..."
-	if [ $force ] || [ ! -f $conf_dir/coords.json ] && [ ! $dont_act ]; then
-		is_connected && disconnect
-		insights="$(query "https://$host/v1/helpers/ips/insights")"
-		longitude="$(echo "$insights" | jq -j '.longitude')"
-		latitude="$(echo "$insights" | jq -j '.latitude')"
-		jq -njc "{longitude: $longitude, latitude: $latitude}" > $conf_dir/coords.json
+	server_pick=""
+	if echo "$1" | grep -q '[0-9]$'; then
+		matched_row="$(grep -m 1 "$1" hostname_ids.txt)" || {
+			print_error "No server with hostname matching $1 found"
+			exit 1
+		}
+		server_id="$(echo "$matched_row" | cut -d '|' -f 2)"
+		server_pick="$(query -G "https://$host/v1/servers" --data-urlencode 'limit=1' --data-urlencode "filters[servers.id]=$server_id" | jq '.[0]')"
 	else
-		longitude="$(jq -er '.longitude' $conf_dir/coords.json)"
-		latitude="$(jq -er '.latitude' $conf_dir/coords.json)"
+		print "Finding best server..."
+		if [ $force ] || [ ! -f $conf_dir/coords.json ] && [ ! $dont_act ]; then
+			is_connected && disconnect
+			insights="$(query "https://$host/v1/helpers/ips/insights")"
+			longitude="$(echo "$insights" | jq -j '.longitude')"
+			latitude="$(echo "$insights" | jq -j '.latitude')"
+			jq -njc "{longitude: $longitude, latitude: $latitude}" > $conf_dir/coords.json
+		else
+			longitude="$(jq -er '.longitude' $conf_dir/coords.json)"
+			latitude="$(jq -er '.latitude' $conf_dir/coords.json)"
+		fi
+		country_code="$(get_country_code "$1")"
+		recommendations="$(query "https://$host/v1/servers/recommendations?limit=20&filters%5Bservers.status%5D=online&filters%5Bservers_technologies%5D=35&filters%5Bservers_technologies%5D%5Bpivot%5D%5Bstatus%5D=online&fields%5Bservers.id%5D&fields%5Bservers.name%5D&fields%5Bservers.hostname%5D&fields%5Bservers.station%5D&fields%5Bservers.status%5D&fields%5Bservers.load%5D&fields%5Bservers.created_at%5D&fields%5Bservers.groups.id%5D&fields%5Bservers.groups.title%5D&fields%5Bservers.technologies.id%5D&fields%5Bservers.technologies.metadata%5D&fields%5Bservers.technologies.pivot.status%5D&fields%5Bservers.specifications.identifier%5D&fields%5Bservers.specifications.values.value%5D&fields%5Bservers.locations.country.name%5D&fields%5Bservers.locations.country.code%5D&fields%5Bservers.locations.country.city.name%5D&fields%5Bservers.locations.country.city.latitude%5D&fields%5Bservers.locations.country.city.longitude%5D&coordinates%5Blongitude%5D=$longitude&coordinates%5Blatitude%5D=$latitude&fields%5Bservers.ips%5D&filters%5Bcountry_id%5D=$country_code")"
+		server_pick="$(echo "$recommendations" | jq '.[0]')"
 	fi
-	country_code="$(get_country_code "$1")"
-	recommendations="$(query "https://$host/v1/servers/recommendations?limit=20&filters%5Bservers.status%5D=online&filters%5Bservers_technologies%5D=35&filters%5Bservers_technologies%5D%5Bpivot%5D%5Bstatus%5D=online&fields%5Bservers.id%5D&fields%5Bservers.name%5D&fields%5Bservers.hostname%5D&fields%5Bservers.station%5D&fields%5Bservers.status%5D&fields%5Bservers.load%5D&fields%5Bservers.created_at%5D&fields%5Bservers.groups.id%5D&fields%5Bservers.groups.title%5D&fields%5Bservers.technologies.id%5D&fields%5Bservers.technologies.metadata%5D&fields%5Bservers.technologies.pivot.status%5D&fields%5Bservers.specifications.identifier%5D&fields%5Bservers.specifications.values.value%5D&fields%5Bservers.locations.country.name%5D&fields%5Bservers.locations.country.code%5D&fields%5Bservers.locations.country.city.name%5D&fields%5Bservers.locations.country.city.latitude%5D&fields%5Bservers.locations.country.city.longitude%5D&coordinates%5Blongitude%5D=$longitude&coordinates%5Blatitude%5D=$latitude&fields%5Bservers.ips%5D&filters%5Bcountry_id%5D=$country_code")"
-	server_name="$(echo "$recommendations" | jq -j '.[0] | .name')"
-	server_hostname="$(echo "$recommendations" | jq -j '.[0] | .hostname')"
-	server_ip="$(echo "$recommendations" | jq -j '.[0] | .ips[0].ip.ip')"
-	server_pubkey="$(echo "$recommendations" | jq -j '.[0] | .technologies[] | select(.metadata[0].name == "public_key") | .metadata[0].value')"
+	server_name="$(echo "$server_pick" | jq -j '.name')"
+	server_hostname="$(echo "$server_pick" | jq -j '.hostname')"
+	server_ip="$(echo "$server_pick" | jq -j '.ips[0].ip.ip')"
+	server_pubkey="$(echo "$server_pick" | jq -j '.technologies[] | select(.metadata[0].name == "public_key") | .metadata[0].value')"
 	privkey="$(jq -j '.nordlynx_private_key' $conf_dir/credentials.json)"
 	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" $conf_dir/template.conf > "$out_file"
 	if [ ! $dont_act ]; then
