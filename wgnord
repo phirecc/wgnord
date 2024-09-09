@@ -96,7 +96,7 @@ status() {
 }
 
 help() { cat << EOF
-Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) | a(ccount) ]
+Usage: wgnord [ l(ogin) | c(onnect) | d(isconnect) | a(ccount) | s(status) ]
 
 login:
     wgnord l "your_token"
