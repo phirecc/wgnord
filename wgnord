@@ -61,20 +61,18 @@ connect() {
 		latitude="$(jq -er '.latitude' $conf_dir/coords.json)"
 	fi
 
-	servernr=$(echo "$1" | sed 's/[^0-9]//g') # get server number
-	[[ -z $servernr ]] && limit=10 || limit=99999 # If server nr is reqested get all servers for that country otherwise get 10 best servers
+	servernr=$(echo "$1" | sed 's/[^0-9]//g')
+	limit=10
+	[ -n "$servernr" ] && limit=99999
 
 	country_code="$(get_country_code "$1")"
 	recommendations="$(query "https://$host/v1/servers/recommendations?limit=$limit&filters%5Bservers.status%5D=online&filters%5Bservers_technologies%5D=35&filters%5Bservers_technologies%5D%5Bpivot%5D%5Bstatus%5D=online&fields%5Bservers.id%5D&fields%5Bservers.name%5D&fields%5Bservers.hostname%5D&fields%5Bservers.station%5D&fields%5Bservers.status%5D&fields%5Bservers.load%5D&fields%5Bservers.created_at%5D&fields%5Bservers.groups.id%5D&fields%5Bservers.groups.title%5D&fields%5Bservers.technologies.id%5D&fields%5Bservers.technologies.metadata%5D&fields%5Bservers.technologies.pivot.status%5D&fields%5Bservers.specifications.identifier%5D&fields%5Bservers.specifications.values.value%5D&fields%5Bservers.locations.country.name%5D&fields%5Bservers.locations.country.code%5D&fields%5Bservers.locations.country.city.name%5D&fields%5Bservers.locations.country.city.latitude%5D&fields%5Bservers.locations.country.city.longitude%5D&coordinates%5Blongitude%5D=$longitude&coordinates%5Blatitude%5D=$latitude&fields%5Bservers.ips%5D&filters%5Bcountry_id%5D=$country_code")"
 
-	# If a server number is requested use it
-	[[ ! -z $servernr ]] && index=$(echo "$recommendations" | jq --arg sr "$servernr" 'to_entries[] | select(.value.hostname | test("[a-zA-Z]*\($sr)\\.")) | .key')
+	[ -n "$servernr" ] && index=$(echo "$recommendations" | jq --arg sr "$servernr" 'to_entries[] | select(.value.hostname | test("[a-zA-Z]*\($sr)\\.")) | .key')
 
-	if [[ -z $index ]] # If no server is set
-	then
-		# But if the server number was set then the sever was not found
-		[[ ! -z $servernr ]] && echo "Could not find server $country_code$servernr using best server"
-		index=0 # Set the index to the best server
+	if [ -z "$index" ]; then
+    		[ -n "$servernr" ] && echo "Could not find server $country_code$servernr, using best server"
+    		index=0
 	fi
 
 	server_name=$(echo "$recommendations" | jq -j --argjson idx "$index" '.[$idx] | .name')
