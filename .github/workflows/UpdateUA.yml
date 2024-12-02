@@ -16,7 +16,7 @@ jobs:
     - name: Fetch latest NordVPN version
       id: fetch_version
       run: |
-        versions="$(curl -s https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/ | grep -oP 'nordvpn_\K[0-9.]+(?=_amd64\.deb)')" || exit 1
+        versions="$(curl -s https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/n/nordvpn/ | grep -oP 'nordvpn_\K[0-9.]+(?=_amd64\.deb)')" || exit 1
         latest_version=$(echo "$versions" | tail -n 1)
         echo "LATEST_VERSION=$latest_version" >> $GITHUB_ENV
 
