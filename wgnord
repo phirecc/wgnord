@@ -1,5 +1,5 @@
 #!/bin/sh
-version="3.20.3"
+version="4.2.0"
 kernel=$(uname -r | cut -d '-' -f 3 --complement)
 [ -z "$kernel" ] && kernel="6.1.0-25"
 alias query="curl -s -H 'User-Agent: NordApp Linux $version $kernel-generic'"
