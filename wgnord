@@ -2,42 +2,48 @@
 version="5.4.0"
 kernel=$(uname -r | cut -d '-' -f 3 --complement)
 [ -z "$kernel" ] && kernel="6.1.0-25"
-alias query="curl -s -H 'User-Agent: NordApp Linux $version $kernel-generic'"
-alias print="printf \"\033[32m%s\n\033[0m\""
-alias print_error="printf \"\033[31m%s\n\033[0m\""
+query() {
+	curl -s -H "User-Agent: NordApp Linux $version $kernel-generic" "$@"
+}
+print() {
+	printf "\033[32m%s\n\033[0m" "$*"
+}
+print_error() {
+	printf "\033[31m%s\n\033[0m" "$*"
+}
 host="api.nordvpn.com"
 conf_dir=/var/lib/wgnord
 check_root() {
 	if [ "$(id -u)" -ne 0 ]; then
-		echo "This script must be run as root"
+		print_error "This script must be run as root"
 		exit 1
 	fi
 }
 account() {
-	auth_token="$(cat $conf_dir/auth_token 2>&1)" || { print_error "Error reading auth_token, are you logged in? ($auth_token)"; exit 1; }
+	auth_token="$(cat "$conf_dir/auth_token" 2>&1)" || { print_error "Error reading auth_token, are you logged in? ($auth_token)"; exit 1; }
 	current="$(query "https://$host/v1/users/current" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token")"
 	services="$(query "https://$host/v1/users/services" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token")"
-	echo "E-Mail: $(echo $current | jq -er '.email')"
-	echo "Created at: $(echo $current | jq -er '.created_at')"
-	echo "VPN Service expires at: $(echo $services | jq -er '.[] | select(.service.identifier == "vpn") | .expires_at')"
+	print "E-Mail: $(echo "$current" | jq -er '.email')"
+	print "Created at: $(echo "$current" | jq -er '.created_at')"
+	print "VPN Service expires at: $(echo "$services" | jq -er '.[] | select(.service.identifier == "vpn") | .expires_at')"
 }
 login() {
 	[ -z "$1" ] && help
 	auth_token="$(printf "%s" "token:$1" | base64 -w 0)"
-	query "https://$host/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > $conf_dir/credentials.json
-	err="$(jq -er '.errors.message' $conf_dir/credentials.json)" && { print_error "Error getting credentials: $err"; exit 1; }
-	echo -n $auth_token > $conf_dir/auth_token
+	query "https://$host/v1/users/services/credentials" -H "Content-Type: application/json" -H "Authorization: Basic $auth_token" > "$conf_dir/credentials.json"
+	err="$(jq -er '.errors.message' "$conf_dir/credentials.json")" && { print_error "Error getting credentials: $err"; exit 1; }
+	printf '%s' "$auth_token" > "$conf_dir/auth_token"
 }
 get_country_code() {
 	cleancode=$(echo "$1" | sed 's/[0-9]*//g')
-	buf="$(grep -i -E "^$cleancode" -m 1 $conf_dir/countries_iso31662.txt | cut -d "	" -f 2)"
-	[ -z "$buf" ] && buf="$(grep -i "$cleancode" -m 1 $conf_dir/countries.txt | cut -d "	" -f 2)"
+	buf="$(grep -i -E "^$cleancode" -m 1 "$conf_dir/countries_iso31662.txt" | cut -d "	" -f 2)"
+	[ -z "$buf" ] && buf="$(grep -i "$cleancode" -m 1 "$conf_dir/countries.txt" | cut -d "	" -f 2)"
 	echo "$buf"
 }
 connect() {
-	[ ! -f $conf_dir/credentials.json ] && {
+	[ ! -f "$conf_dir/credentials.json" ] && {
 		print_error "$conf_dir/credentials.json doesn't exist, are you logged in?"
-		echo -e "\nNote: wgnord changed its login mechanism in version 0.2.0. See --help on how to login."
+		print "\nNote: wgnord changed its login mechanism in version 0.2.0. See --help on how to login."
 		exit 1
 	}
 	out_file=/etc/wireguard/wgnord.conf
@@ -50,15 +56,15 @@ connect() {
 	esac done
 	[ -z "$1" ] && help
 	print "Finding best server..."
-	if [ $force ] || [ ! -f $conf_dir/coords.json ] && [ ! $dont_act ]; then
+	if [ "$force" ] || [ ! -f "$conf_dir/coords.json" ] && [ ! "$dont_act" ]; then
 		is_connected && disconnect
 		insights="$(query "https://$host/v1/helpers/ips/insights")"
 		longitude="$(echo "$insights" | jq -j '.longitude')"
 		latitude="$(echo "$insights" | jq -j '.latitude')"
-		jq -njc "{longitude: $longitude, latitude: $latitude}" > $conf_dir/coords.json
+		jq -njc "{longitude: $longitude, latitude: $latitude}" > "$conf_dir/coords.json"
 	else
-		longitude="$(jq -er '.longitude' $conf_dir/coords.json)"
-		latitude="$(jq -er '.latitude' $conf_dir/coords.json)"
+		longitude="$(jq -er '.longitude' "$conf_dir/coords.json")"
+		latitude="$(jq -er '.latitude' "$conf_dir/coords.json")"
 	fi
 
 	servernr=$(echo "$1" | sed 's/[^0-9]//g')
@@ -71,7 +77,7 @@ connect() {
 	[ -n "$servernr" ] && index=$(echo "$recommendations" | jq --arg sr "$servernr" 'to_entries[] | select(.value.hostname | test("[a-zA-Z]*\($sr)\\.")) | .key')
 
 	if [ -z "$index" ]; then
-    		[ -n "$servernr" ] && echo "Could not find server $country_code$servernr, using best server"
+    		[ -n "$servernr" ] && print_error "Could not find server $country_code$servernr, using best server"
     		index=0
 	fi
 
@@ -80,9 +86,9 @@ connect() {
 	server_ip=$(echo "$recommendations" | jq -j --argjson idx "$index" '.[$idx] | .ips[0].ip.ip')
 	server_pubkey=$(echo "$recommendations" | jq -j --argjson idx "$index" '.[$idx] | .technologies[] | select(.metadata[0].name == "public_key") | .metadata[0].value')
 
-	privkey="$(jq -j '.nordlynx_private_key' $conf_dir/credentials.json)"
-	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" $conf_dir/template.conf > "$out_file"
-	if [ ! $dont_act ]; then
+	privkey="$(jq -j '.nordlynx_private_key' "$conf_dir/credentials.json")"
+	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" "$conf_dir/template.conf" > "$out_file"
+	if [ ! "$dont_act" ]; then
 		print "Connecting to $server_hostname ($server_name)..."
 		if is_connected; then
 			wg-quick strip wgnord | wg setconf wgnord /dev/stdin
