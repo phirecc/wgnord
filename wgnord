@@ -42,9 +42,10 @@ connect() {
 	}
 	out_file=/etc/wireguard/wgnord.conf
 	OPTIND=2
-	while getopts "fno:" o; do case "$o" in
+	while getopts "fnqo:" o; do case "$o" in
 		f) force=1 ;;
 		n) dont_act=1 ;;
+		q) no_wait=1 ;;
 		o) out_file="$OPTARG" ;;
 		*) exit 1 ;;
 	esac done
@@ -84,12 +85,19 @@ connect() {
 	sed -e "s|PRIVKEY|$privkey|" -e "s|SERVER_PUBKEY|$server_pubkey|" -e "s|SERVER_IP|$server_ip|" $conf_dir/template.conf > "$out_file"
 	if [ ! $dont_act ]; then
 		print "Connecting to $server_hostname ($server_name)..."
-		if is_connected; then
-			wg-quick strip wgnord | wg setconf wgnord /dev/stdin
-			wg set wgnord fwmark 0xca6c
-		else
+		if ! is_connected; then
 			wg-quick up wgnord
-		fi && print "Connected successfully!"
+		else
+			wg-quick strip wgnord | wg setconf wgnord /dev/stdin && \
+			wg set wgnord fwmark 0xca6c
+		fi || { print_error "Failed to bring up interface"; exit 1; }
+
+		if [ $no_wait ]; then
+			print "Interface is up"
+		else
+			wait_server || { print_error "Interface is up but no server connected"; exit 1; }
+			print "Connected successfully!"
+		fi
 	fi
 }
 disconnect() {
@@ -101,10 +109,27 @@ is_connected() {
 	return
 }
 
+get_endpoint() {
+	wg show wgnord endpoints | awk '{print $2}'
+}
+
+wait_server() {
+	i=0; while [ "$i" -lt 20 ]; do
+		[ -n "$(get_endpoint)" ] && return 0
+		sleep 0.1
+		i=$((i + 1))
+	done
+	return 1
+}
+
 status() {
 	if is_connected; then
-		server_ip="$(wg show wgnord endpoints | awk '{print $2}')"
-		print "Connected to: $server_ip"
+		server_ip="$(get_endpoint)"
+		if [ -n "$server_ip" ]; then
+			print "Connected to: $server_ip"
+		else
+			print_error "Interface is up but no server connected"
+		fi
 	else
 		print_error "No active VPN connection"
 	fi
@@ -120,6 +145,7 @@ connect:
     wgnord c france
     -f            Refresh cached longitude/latitude
     -n            Don't connect
+    -q            Don't wait up to 2 seconds for the connection to come up
     -o out.conf   Write config to different file
 disconnect:
     wgnord d
