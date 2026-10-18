@@ -11,6 +11,7 @@ connect:
     wgnord c france
     -f            Refresh cached longitude/latitude
     -n            Don't connect
+    -s            Shuffle recommendations list before connecting
     -o out.conf   Write config to different file
 disconnect:
     wgnord d
